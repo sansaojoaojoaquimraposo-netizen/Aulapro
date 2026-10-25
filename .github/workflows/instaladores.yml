@@ -10,6 +10,9 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: Aulapro
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,7 +30,7 @@ jobs:
         with:
           name: AulaPro-${{ matrix.os }}
           path: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.AppImage
-            dist/*.deb
+            Aulapro/dist/*.exe
+            Aulapro/dist/*.dmg
+            Aulapro/dist/*.AppImage
+            Aulapro/dist/*.deb
