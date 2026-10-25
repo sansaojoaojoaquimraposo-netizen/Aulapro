@@ -10,27 +10,35 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: Aulapro
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+      - name: Localizar a pasta do projeto
+        shell: bash
+        run: |
+          P=$(find . -maxdepth 3 -name package.json -not -path '*/node_modules/*' | head -1)
+          if [ -z "$P" ]; then echo "package.json nao encontrado. Ficheiros no repositorio:"; find . -maxdepth 2 -not -path './.git*'; exit 1; fi
+          echo "PROJ=$(dirname "$P")" >> "$GITHUB_ENV"
+          echo "Projeto em: $(dirname "$P")"
       - run: npm install
+        working-directory: ${{ env.PROJ }}
       - name: Dados OCR offline (português)
         shell: bash
+        working-directory: ${{ env.PROJ }}
         run: |
           mkdir -p src/ocr
           curl -L -o src/ocr/por.traineddata https://github.com/tesseract-ocr/tessdata_fast/raw/main/por.traineddata
       - run: npm test
+        working-directory: ${{ env.PROJ }}
         env: { AULAPRO_TESTE: '1' }
       - run: npx electron-builder --publish never
+        working-directory: ${{ env.PROJ }}
       - uses: actions/upload-artifact@v4
         with:
           name: AulaPro-${{ matrix.os }}
           path: |
-            Aulapro/dist/*.exe
-            Aulapro/dist/*.dmg
-            Aulapro/dist/*.AppImage
-            Aulapro/dist/*.deb
+            ${{ env.PROJ }}/dist/*.exe
+            ${{ env.PROJ }}/dist/*.dmg
+            ${{ env.PROJ }}/dist/*.AppImage
+            ${{ env.PROJ }}/dist/*.deb
