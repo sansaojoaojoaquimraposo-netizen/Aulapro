@@ -2,6 +2,7 @@
 // Teste do backend do ANDROID: carrega os módulos do AulaPro com os shims móveis (fs virtual, path, crypto,
 // adaptador sql.js, electron-shim). O sql.js real (WebAssembly) é simulado sobre node:sqlite com a mesma API.
 process.env.AULAPRO_TESTE = '1';
+process.env.AULAPRO_MOBILE = '1';
 const Module = require('module'), path = require('path'), crypto = require('crypto');
 const { DatabaseSync } = require('node:sqlite');
 const M = (f) => path.join(__dirname, '..', 'src', 'mobile', f);

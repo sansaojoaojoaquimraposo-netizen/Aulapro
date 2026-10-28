@@ -2,8 +2,8 @@
 const path = require('path');
 const fs = require('fs');
 let Database;
-try { Database = require('better-sqlite3'); }
-catch (e) { if (process.env.AULAPRO_TESTE) Database = require('node:sqlite').DatabaseSync; else throw e; } // fallback só para testes automáticos
+if (process.env.AULAPRO_TESTE && !process.env.AULAPRO_MOBILE) Database = require('node:sqlite').DatabaseSync;
+else Database = require('better-sqlite3');
 
 let db;
 
