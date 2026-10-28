@@ -1,30 +1,34 @@
-name: Gerar instaladores AulaPro
+name: Empacotar e publicar AulaPro
 on:
   workflow_dispatch:
   push:
     tags: ['v*']
+
 jobs:
-  build:
+  desktop:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+          - os: macos-latest
+          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: Aulapro
+        working-directory: aulapro
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm install
+        with: { node-version: 22 }
+      - run: npm ci
       - name: Dados OCR offline (português)
         shell: bash
-        run: |
-          mkdir -p src/ocr
-          curl -L -o src/ocr/por.traineddata https://github.com/tesseract-ocr/tessdata_fast/raw/main/por.traineddata
+        run: curl --fail --location --retry 3 -o src/ocr/por.traineddata https://github.com/tesseract-ocr/tessdata_fast/raw/main/por.traineddata
       - run: npm test
         env: { AULAPRO_TESTE: '1' }
+      - run: npm run build:icons
       - run: npx electron-builder --publish never
       - uses: actions/upload-artifact@v4
         with:
@@ -34,3 +38,92 @@ jobs:
             aulapro/dist/*.dmg
             aulapro/dist/*.AppImage
             aulapro/dist/*.deb
+          if-no-files-found: error
+          retention-days: 14
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aulapro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - run: npm ci --ignore-scripts
+      - run: npm test
+        env: { AULAPRO_TESTE: '1' }
+      - run: npm run mobile:build
+      - name: Preparar projecto Android
+        run: |
+          npx cap add android
+          sed -i 's#<application#<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application#' android/app/src/main/AndroidManifest.xml
+          mapfile -t icons < <(find android/app/src/main/res -type f -name 'ic_launcher*.png')
+          if [ "${#icons[@]}" -eq 0 ]; then
+            echo "Os ícones Android padrão não foram encontrados."
+            exit 1
+          fi
+          for icon in "${icons[@]}"; do cp build/icon.png "$icon"; done
+          npx cap sync android
+      - name: Compilar APK Android
+        working-directory: aulapro/android
+        run: ./gradlew assembleDebug
+      - name: Preparar APK para descarregar
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk AulaPro-Android-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AulaPro-Android-APK
+          path: aulapro/AulaPro-Android-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  pwa:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aulapro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --ignore-scripts
+      - run: npm run pwa:build
+      - name: Preparar pacote web para alojamento
+        run: |
+          cd www
+          zip -q -r ../AulaPro-PWA.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AulaPro-PWA
+          path: aulapro/AulaPro-PWA.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  publicar:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [desktop, android, pwa]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar versão da etiqueta
+        run: |
+          VERSION="$(node -p "require('./aulapro/package.json').version")"
+          test "${GITHUB_REF_NAME}" = "v${VERSION}" || {
+            echo "A etiqueta ${GITHUB_REF_NAME} não corresponde à versão ${VERSION} do package.json"
+            exit 1
+          }
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: AulaPro-*
+          path: release-assets
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: AulaPro ${{ github.ref_name }}
+          generate_release_notes: true
+          files: release-assets/*
+          fail_on_unmatched_files: true

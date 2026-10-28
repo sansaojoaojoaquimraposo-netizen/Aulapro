@@ -1,0 +1,98 @@
+{
+  "name": "aulapro",
+  "productName": "AulaPro",
+  "version": "1.0.0",
+  "description": "AulaPro All-in-1 — software para professores moçambicanos. Funciona 100% offline.",
+  "author": "AulaPro <suporte@aula.pro>",
+  "homepage": "https://aula.pro",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "electron-builder install-app-deps || true",
+    "test": "node test/calc.test.js && node --disable-warning=ExperimentalWarning test/db.test.js && node --disable-warning=ExperimentalWarning test/mobile.test.js",
+    "build:icons": "node scripts/build-icons.js",
+    "pwa:build": "npm run build:icons && node scripts/build-mobile.js",
+    "dist:win": "npm run build:icons && electron-builder --win nsis portable",
+    "dist:mac": "npm run build:icons && electron-builder --mac dmg",
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "dist": "npm run build:icons && electron-builder",
+    "mobile:build": "node scripts/build-mobile.js"
+  },
+  "dependencies": {
+    "@capacitor-community/speech-recognition": "^6.0.1",
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.2",
+    "@capacitor/share": "^6.0.3",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.5.0",
+    "docx": "^8.5.0",
+    "electron-updater": "^6.3.9",
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.15.0",
+    "pptxgenjs": "^3.12.0",
+    "tesseract.js": "^5.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "buffer": "^6.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.24.0",
+    "png2icons": "^2.0.1",
+    "pngjs": "^7.0.0",
+    "sql.js": "^1.11.0"
+  },
+  "build": {
+    "appId": "pro.aula.app",
+    "productName": "AulaPro",
+    "copyright": "AulaPro — Muanza, Sofala",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**",
+      "**/node_modules/tesseract.js-core/**",
+      "src/ocr/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.education",
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Education",
+      "icon": "build/icon.png"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://aula.pro/updates/"
+      }
+    ]
+  }
+}

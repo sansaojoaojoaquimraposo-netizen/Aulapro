@@ -1,0 +1,13 @@
+node_modules/
+dist/
+android/
+www/
+build/icon.ico
+build/icon.icns
+build/icon-192.png
+build/icon-512.png
+AulaPro-Android-debug.apk
+android/
+www/
+AulaPro-Android-debug.apk
+*.log

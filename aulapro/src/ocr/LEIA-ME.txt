@@ -1,0 +1,4 @@
+Coloque aqui o ficheiro "por.traineddata" (dados de português do Tesseract, versão "fast", NÃO comprimido)
+antes de gerar o instalador. Assim o OCR de fotos de manuscrito funciona 100% offline.
+Descarregar: https://github.com/tesseract-ocr/tessdata_fast/raw/main/por.traineddata
+(O workflow do GitHub Actions faz isto automaticamente.)
