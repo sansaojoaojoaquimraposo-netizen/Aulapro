@@ -3,17 +3,17 @@
 const ADMIN_PAGINAS = {
   async adm_dash(el) {
     const d = await API('admin.dashboard'); const max = Math.max(1, ...d.acessos.map((a) => a.n)); const rmax = Math.max(1, ...d.receita.map((r) => r.v));
-     const modulos = [['adm_users', '👥', 'Utilizadores', 'Contas, planos e acessos', 'azul'], ['adm_fila', '💳', 'Pagamentos', 'Verificar comprovativos', 'verde'],
-       ['adm_inbox', '📨', 'Reclamações', 'Responder e acompanhar pedidos', 'laranja'], ['adm_chat', '💬', 'Mensagens', 'Conversas com utilizadores', 'lilas'],
-       ['adm_config', '⚙️', 'Pagamentos e configuração', 'Números e definições da plataforma', 'oceano'], ['adm_update', '🚀', 'Actualizações', 'Versão e notas de lançamento', 'rosa'],
-       ['adm_logs', '📋', 'Registos do sistema', 'Actividade e auditoria', 'amarelo']];
-     el.innerHTML = `<h1>Painel do Desenvolvedor</h1><div class="grid g4" style="margin:12px 0"><div class="card kpi"><div class="mut sm">Total de utilizadores</div><div class="n">${d.totalUsers}</div><div class="sm az">+${d.novosSemana} esta semana</div></div>
-      <div class="card kpi a"><div class="mut sm">Pagamentos pendentes</div><div class="n">${d.pendentes}</div><div class="sm mut">a aguardar</div></div><div class="card kpi r"><div class="mut sm">Reclamações abertas</div><div class="n">${d.reclamacoes}</div><div class="sm mut">${d.reclamacoesAltas} de alta prioridade</div></div>
+    const modulos = [['adm_users', '👥', 'Utilizadores', 'Contas, planos e acessos', 'azul'], ['adm_fila', '💳', 'Pagamentos', 'Verificar comprovativos', 'verde'],
+      ['adm_inbox', '📨', 'Reclamações', 'Responder e acompanhar pedidos', 'laranja'], ['adm_chat', '💬', 'Mensagens', 'Conversas com utilizadores', 'lilas'],
+      ['adm_config', '⚙️', 'Pagamentos e configuração', 'Números e definições da plataforma', 'oceano'], ['adm_update', '🚀', 'Actualizações', 'Versão e notas de lançamento', 'rosa'],
+      ['adm_logs', '📋', 'Registos do sistema', 'Actividade e auditoria', 'amarelo']];
+    el.innerHTML = `<h1>Painel do Desenvolvedor</h1><div class="grid g4" style="margin:12px 0"><div class="card kpi"><div class="mut sm">Total de utilizadores</div><div class="n">${d.totalUsers}</div><div class="sm az">+${d.novosSemana} esta semana</div></div>
+     <div class="card kpi a"><div class="mut sm">Pagamentos pendentes</div><div class="n">${d.pendentes}</div><div class="sm mut">a aguardar</div></div><div class="card kpi r"><div class="mut sm">Reclamações abertas</div><div class="n">${d.reclamacoes}</div><div class="sm mut">${d.reclamacoesAltas} de alta prioridade</div></div>
      <div class="card kpi v"><div class="mut sm">Versão</div><div class="n" style="font-size:24px">v${esc(d.versao)}</div><div class="sm mut">Estável</div></div></div>
-     <div class="grid g2"><div class="card"><h2>Utilizadores activos por dia</h2><div class="chart">${d.acessos.map((a) => `<div style="height:${a.n / max * 100}%"><span>${a.n}</span></div>`).join('') || '<span class="mut">Sem acessos registados.</span>'}</div><div class="sm mut">${d.acessos.map((a) => a.d.slice(5)).join(' · ')}</div></div>
-      <div class="card"><h2>Receita por plano (verificada)</h2>${d.receita.map((r) => `<div class="row sp sm"><span>${esc(r.plano)}</span><b>${mt(r.v)}</b></div>${barra(r.v / rmax * 100)}`).join('') || '<span class="mut">Sem receita verificada.</span>'}</div></div>
-      <h2 style="margin-top:24px">Gestão AulaPro</h2><div class="grid home-modules admin-modules">${modulos.map(([rota, icone, titulo, descricao, cor]) => `<button class="home-module ${cor}" data-admin-route="${rota}" type="button"><span class="home-module-icon">${icone}</span><span class="home-module-text"><b>${titulo}</b><span>${descricao}</span></span><span class="home-module-arrow" aria-hidden="true">›</span></button>`).join('')}</div>`;
-     $$('[data-admin-route]', el).forEach((b) => (b.onclick = () => ir(b.dataset.adminRoute)));
+    <div class="grid g2"><div class="card"><h2>Utilizadores activos por dia</h2><div class="chart">${d.acessos.map((a) => `<div style="height:${a.n / max * 100}%"><span>${a.n}</span></div>`).join('') || '<span class="mut">Sem acessos registados.</span>'}</div><div class="sm mut">${d.acessos.map((a) => a.d.slice(5)).join(' · ')}</div></div>
+     <div class="card"><h2>Receita por plano (verificada)</h2>${d.receita.map((r) => `<div class="row sp sm"><span>${esc(r.plano)}</span><b>${mt(r.v)}</b></div>${barra(r.v / rmax * 100)}`).join('') || '<span class="mut">Sem receita verificada.</span>'}</div></div>
+     <h2 style="margin-top:24px">Gestão AulaPro</h2><div class="grid home-modules admin-modules">${modulos.map(([rota, icone, titulo, descricao, cor]) => `<button class="home-module ${cor}" data-admin-route="${rota}" type="button"><span class="home-module-icon">${icone}</span><span class="home-module-text"><b>${titulo}</b><span>${descricao}</span></span><span class="home-module-arrow" aria-hidden="true">›</span></button>`).join('')}</div>`;
+    $$('[data-admin-route]', el).forEach((b) => (b.onclick = () => ir(b.dataset.adminRoute)));
   },
   async adm_users(el) {
     const f = E.ctx.f || {}; const us = await API('admin.users', f);

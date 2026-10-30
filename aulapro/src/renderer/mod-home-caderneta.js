@@ -22,8 +22,9 @@ async function paginaHome(el) {
   }
   const simbolos = { plano: '📝', apresentacao: '🖥️', ficha: '📄' };
   el.innerHTML = `<section class="home-welcome">
+    <div class="home-brand"><img src="logo.png" alt=""><div><strong>AulaPro</strong><span>Plataforma de Gestão Pedagógica · Moçambique</span></div></div>
     <div class="home-greeting"><div><h1>${saudacao}, ${E.user.papel === 'director' ? 'Director' : 'Prof.'} ${esc(primeiroNome)}! 👋</h1>
-      <p class="mut">${new Date().toLocaleDateString('pt-MZ', { dateStyle: 'full' })} · ${esc(E.user.escola || 'Vamos organizar o seu trabalho de hoje.')}</p></div>
+      <p class="mut">${new Date().toLocaleDateString('pt-MZ', { dateStyle: 'full' })} · Vamos organizar o seu trabalho de hoje.</p></div>
       <div class="home-profile"><div class="av">${esc(iniciais(s.nome))}</div><div><b>${esc(s.nome)}</b><span>${esc(E.user.escola || (E.user.papel === 'director' ? 'Director' : 'Professor'))}</span></div></div>
     </div>
   </section>
@@ -32,7 +33,7 @@ async function paginaHome(el) {
     <div class="card home-stat stat-students"><span class="home-stat-icon">👥</span><div><b>${s.estudantes} ${s.estudantes === 1 ? 'Aluno' : 'Alunos'}</b><span>Nas suas turmas</span></div></div>
     <div class="card home-stat stat-average"><span class="home-stat-icon">📈</span><div><b>${s.mediaGeral === null ? '—' : num(s.mediaGeral)}${s.mediaGeral === null ? '' : ' / 20'}</b><span>${s.mediaGeral === null ? 'A média aparece após lançar notas' : 'Média geral das notas finais'}</span></div></div>
   </div>
-  <div class="row sp home-section-title"><div><h2>O que vamos fazer hoje?</h2><p class="mut sm">Escolha um módulo para começar. Todas as ferramentas estão aqui.</p></div><button data-n>+ Criar novo</button></div>
+  <div class="row sp home-section-title"><div><h2>Módulos AulaPro</h2><p class="mut sm">Aceda rapidamente às ferramentas de que precisa.</p></div><button data-n>+ Criar novo</button></div>
   <div class="grid home-modules">${modulos.map(([rota, icone, titulo, descricao, cor]) => `<button class="home-module ${cor}" data-ir="${rota}" type="button">
     <span class="home-module-icon">${icone}</span><span class="home-module-text"><b>${titulo}</b><span>${descricao}</span></span><span class="home-module-arrow" aria-hidden="true">›</span>
   </button>`).join('')}</div>
