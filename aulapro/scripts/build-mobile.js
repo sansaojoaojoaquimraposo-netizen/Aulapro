@@ -1,6 +1,6 @@
 'use strict';
 // Gera a pasta www/ (interface + backend em WebAssembly) que o Capacitor empacota no APK.
-const fs = require('fs'), path = require('path');
+const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const esbuild = require('esbuild');
 const raiz = path.join(__dirname, '..'), www = path.join(raiz, 'www'), m = (...p) => path.join(raiz, 'src', 'mobile', ...p);
 const nm = (p) => path.join(raiz, 'node_modules', p);
@@ -69,7 +69,13 @@ const plugin = {
       return entry.isFile() && entry.name !== 'service-worker.js' ? [`./${relativePath}`] : [];
     });
   const recursos = listarRecursos(www);
-  const worker = `'use strict';\nconst CACHE = 'aulapro-${versao}';\nconst ASSETS = ${JSON.stringify(recursos)};\nself.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())));\nself.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith('aulapro-') && key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())));\nself.addEventListener('fetch', (event) => {\n  const request = event.request;\n  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;\n  event.respondWith(caches.match(request).then((cached) => cached || fetch(request).catch((error) => {\n    if (request.mode === 'navigate') return caches.match('./index.html');\n    throw error;\n  })));\n});\n`;
+  const hash = crypto.createHash('sha256');
+  for (const recurso of recursos) {
+    const relativo = recurso.slice(2);
+    hash.update(relativo).update(fs.readFileSync(path.join(www, relativo)));
+  }
+  const cache = `aulapro-${versao}-${hash.digest('hex').slice(0, 12)}`;
+  const worker = `'use strict';\nconst CACHE = '${cache}';\nconst ASSETS = ${JSON.stringify(recursos)};\nself.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())));\nself.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith('aulapro-') && key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())));\nself.addEventListener('fetch', (event) => {\n  const request = event.request;\n  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;\n  event.respondWith(caches.match(request).then((cached) => cached || fetch(request).catch((error) => {\n    if (request.mode === 'navigate') return caches.match('./index.html');\n    throw error;\n  })));\n});\n`;
   fs.writeFileSync(path.join(www, 'service-worker.js'), worker);
   console.log('www/ pronto para Android e instalação PWA.');
 })().catch((e) => { console.error(e); process.exit(1); });
