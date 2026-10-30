@@ -1,5 +1,5 @@
 'use strict';
-// Estrutura principal: menu lateral, rotas, banner offline, tema, expiração de sessão.
+// Estrutura principal: cabeçalho, rotas, banner offline, tema, expiração de sessão.
 const ROTAS = {
   home: { t: 'Início', i: '🏠', f: () => paginaHome },
   caderneta: { t: 'Caderneta Mestra', i: '📒', f: () => paginaCaderneta },
@@ -16,7 +16,6 @@ const ROTAS = {
 const ADMIN_ROTAS = { adm_dash: 'Visão geral', adm_users: 'Utilizadores', adm_fila: 'Fila de pagamentos', adm_config: 'Números de pagamento', adm_inbox: 'Reclamações', adm_chat: 'Chat', adm_update: 'Actualizações', adm_logs: 'Logs' };
 
 function tema(t) { document.documentElement.dataset.tema = t; try { localStorage.setItem('tema', t); } catch {} }
-function fecharMenu() { $('.side')?.classList.remove('open'); $('#vel')?.classList.remove('on'); }
 function ir(rota, ctx = {}) { E.rota = rota; E.ctx = ctx; desenhar(); }
 
 async function iniciarApp() {
@@ -28,23 +27,18 @@ async function iniciarApp() {
 
 function desenharCasca() {
   const u = E.user, adm = u.papel === 'admin';
-  const itens = adm ? Object.entries(ADMIN_ROTAS).map(([k, t]) => [k, t, '🛠️']) : Object.entries(ROTAS).map(([k, r]) => [k, r.t, r.i]);
   const pk = E.info?.planoKey || 'gratis';
-  $('#raiz').innerHTML = `<div class="app"><nav class="side"><div class="logo"><img src="logo.png" alt="">AulaPro</div>
-    ${itens.map(([k, t, i]) => `<a data-r="${k}">${i} ${esc(t)}</a>`).join('')}<div class="grow"></div>
-    ${adm ? '' : `<div class="plano"><b>Plano ${esc(E.info?.planos?.[pk]?.nome || 'Grátis')}</b><div class="mut" style="color:#AFC3EE">${pk === 'gratis' ? 'Recursos limitados' : 'Válido até ' + dataCurta(E.info.expira)}</div>${pk === 'gratis' ? '<button class="sm" id="up" style="margin-top:8px;width:100%;background:#fff;color:var(--az)">Assinar 299 MT/mês</button>' : ''}</div>`}
-    <a id="sair" style="margin-top:8px">🚪 Sair</a></nav>
-    <div id="vel" class="vel"></div><div class="main"><div id="off" class="off hide">Modo Offline activo — as alterações são guardadas localmente e sincronizadas quando voltar online.</div>
-    <div class="top"><div class="row" style="flex-wrap:nowrap"><button class="mn" id="mn" aria-label="Menu">☰</button><div id="titulo" class="b"></div></div><div class="u"><button class="gh" id="tm" title="Tema">🌓</button><button class="gh" id="chtb" title="Mensagens">🔔<span id="nl" class="badge hide"></span></button>
-    <div style="text-align:right"><div class="b">${esc(u.nome)}</div><div class="sm mut">${esc(adm ? 'Desenvolvedor' : (u.escola || (u.papel === 'director' ? 'Director' : 'Professor')))}</div></div><div class="av">${esc(iniciais(u.nome))}</div></div></div>
-    <div id="pg" class="pg"></div></div></div>`;
-  $$('[data-r]').forEach((a) => (a.onclick = () => { fecharMenu(); ir(a.dataset.r); }));
-  $('#mn').onclick = () => { $('.side').classList.toggle('open'); $('#vel').classList.toggle('on'); };
-  $('#vel').onclick = fecharMenu;
+  const paginaInicial = adm ? 'adm_dash' : 'home';
+  $('#raiz').innerHTML = `<div class="app"><main class="main"><div id="off" class="off hide">Modo Offline activo — as alterações são guardadas localmente e sincronizadas quando voltar online.</div>
+    <header class="top"><button class="top-brand" id="inicio" aria-label="Ir para o início"><img src="logo.png" alt=""><span><b>AulaPro</b><small>Plataforma de Gestão Pedagógica</small></span></button>
+    <div class="top-page-title b" id="titulo"></div><div class="u"><button class="gh" id="tm" title="Tema" aria-label="Alternar tema">🌓</button>${adm ? '' : '<button class="gh" id="chtb" title="Mensagens" aria-label="Mensagens">🔔<span id="nl" class="badge hide"></span></button>'}
+    <div class="top-user"><div class="b">${esc(u.nome)}</div><div class="sm mut">${esc(adm ? 'Desenvolvedor' : (u.escola || (u.papel === 'director' ? 'Director' : 'Professor')))}</div>${!adm ? `<div class="sm top-plan">${esc(E.info?.planos?.[pk]?.nome || 'Grátis')}${E.info?.expira ? ` · até ${dataCurta(E.info.expira)}` : ''}</div>` : ''}</div>
+    <div class="av">${esc(iniciais(u.nome))}</div><button class="gh top-logout" id="sair" title="Sair da conta">Sair</button></div></header>
+    <div id="pg" class="pg"></div></main></div>`;
+  $('#inicio').onclick = () => ir(paginaInicial);
   $('#sair').onclick = async () => { await API('auth.sair'); E.user = null; mostrarAuth(); };
   $('#tm').onclick = () => tema(document.documentElement.dataset.tema === 'escuro' ? 'claro' : 'escuro');
-  $('#chtb').onclick = () => ir(adm ? 'adm_chat' : 'suporte');
-  if ($('#up')) $('#up').onclick = () => ir('planos');
+  if ($('#chtb')) $('#chtb').onclick = () => ir('suporte');
   const modoRede = () => $('#off').classList.toggle('hide', navigator.onLine);
   window.addEventListener('online', modoRede); window.addEventListener('offline', modoRede); modoRede();
   if (!adm) verificarVersao();
@@ -55,7 +49,6 @@ async function verificarVersao() {
 }
 
 async function desenhar() {
-  $$('[data-r]').forEach((a) => a.classList.toggle('on', a.dataset.r === E.rota));
   const alvo = $('#pg'); if (!alvo) return;
   const nome = ROTAS[E.rota]?.t || ADMIN_ROTAS[E.rota] || '';
   $('#titulo').textContent = nome;
