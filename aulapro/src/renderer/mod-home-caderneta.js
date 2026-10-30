@@ -2,24 +2,40 @@
 // Início + Módulo 1 (Caderneta Mestra)
 async function paginaHome(el) {
   const s = await API('home.stats');
-  const info = E.info, pk = info.planoKey;
-  const mods = [['caderneta', '📒', 'Caderneta Mestra', 'Notas, médias e resultados automáticos'], ['plano', '📝', 'Plano de Aula', 'Gere planos a partir dos seus materiais'],
-    ['apresentacao', '🖥️', 'Apresentação 1-Clique', 'Do plano para os slides'], ['fichas', '📄', 'Fichas e Testes', 'Edite, exporte PDF/DOCX'],
-    ['biblioteca', '📚', 'Biblioteca', 'Livros e materiais abertos'], ['voz', '🎙️', 'Assistente de Voz', 'Fale e o plano aparece']];
-  const L = info.limites;
-  el.innerHTML = `<h1>Bem-vindo, ${esc(s.nome.split(' ')[0] ? 'Prof. ' + s.nome.split(' ')[0] : s.nome)}!</h1><p class="mut">${new Date().toLocaleDateString('pt-MZ', { dateStyle: 'full' })}</p>
-  <div class="grid g4" style="margin:14px 0">
-    <div class="card kpi"><div class="mut sm">Estudantes</div><div class="n">${s.estudantes}</div></div>
-    <div class="card kpi v"><div class="mut sm">Turmas activas</div><div class="n">${s.turmas}</div></div>
-    <div class="card kpi a"><div class="mut sm">Planos de aula</div><div class="n">${s.planos}</div></div>
-    <div class="card kpi r"><div class="mut sm">Apresentações / Fichas</div><div class="n">${s.apresentacoes} / ${s.fichas}</div></div></div>
-  <div class="row sp"><h2>Módulos recentes</h2><button data-n>+ Criar novo módulo</button></div>
-  <div class="grid g4" style="margin-bottom:16px">${s.progresso.length ? s.progresso.map((p) => `<div class="card mod" data-ir="caderneta" data-t="${p.id}"><div class="b">${esc(p.nome)}</div><div class="sm mut">${p.alunos} estudantes</div>${barra(p.pct)}<div class="sm">${p.pct}% lançado</div></div>`).join('')
-    : '<div class="card mut" style="grid-column:1/-1">Ainda não tem turmas. Crie a primeira na Caderneta Mestra.</div>'}</div>
-  ${pk === 'gratis' ? `<div class="banner"><div><div class="b" style="font-size:18px">Upgrade para Premium — 299 MT/mês</div><div class="sm">Turmas ilimitadas, Regra B, exportação sem marca de água, voz e muito mais.</div></div><button data-ir="planos">Assinar agora</button></div>` : ''}
-  <h2 style="margin-top:20px">Módulos AulaPro</h2><div class="grid g3">${mods.map(([r, i, t, d]) => `<div class="card mod" data-ir="${r}"><div class="ic">${i}</div><div class="b">${t}</div><div class="sm mut">${d}</div></div>`).join('')}</div>
-  <h2 style="margin-top:20px">Actividade recente</h2><div class="card">${s.recentes.length ? s.recentes.map((d) => `<div class="row sp" style="padding:5px 0"><span>${{ plano: '📝', apresentacao: '🖥️', ficha: '📄' }[d.tipo] || '•'} ${esc(d.titulo)}</span><span class="sm mut">${dataHora(d.actualizado_em)}</span></div>`).join('') : '<span class="mut">Sem actividade ainda.</span>'}</div>
-  ${pk === 'gratis' ? `<h2 style="margin-top:20px">Grátis vs Premium</h2>${tabelaComparativa()}` : ''}`;
+  const pk = E.info?.planoKey || 'gratis';
+  const primeiroNome = s.nome.trim().split(/\s+/)[0] || s.nome;
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  const modulos = [
+    ['caderneta', '📒', 'Caderneta de Notas', 'Gerir turmas, alunos e médias', 'verde'],
+    ['plano', '📝', 'Plano de Aula Gerador', 'Preparar aulas a partir dos seus materiais', 'lilas'],
+    ['apresentacao', '🖥️', 'Apresentação 1-Clique', 'Transformar planos em apresentações', 'laranja'],
+    ['fichas', '📄', 'Documento Inteligente', 'Criar fichas, testes e documentos', 'azul'],
+    ['fichas', '📥', 'Exportar documentos', 'Preparar ficheiros PDF e DOCX', 'menta'],
+    ['biblioteca', '📚', 'Biblioteca de Recursos', 'Encontrar livros e materiais de apoio', 'amarelo'],
+  ];
+  const simbolos = { plano: '📝', apresentacao: '🖥️', ficha: '📄' };
+  el.innerHTML = `<section class="home-welcome">
+    <div class="home-brand"><img src="logo.png" alt=""><div><strong>AulaPro</strong><span>Plataforma de Gestão Pedagógica · Moçambique</span></div></div>
+    <div class="home-greeting"><div><h1>${saudacao}, ${E.user.papel === 'director' ? 'Director' : 'Prof.'} ${esc(primeiroNome)}! 👋</h1>
+      <p class="mut">${new Date().toLocaleDateString('pt-MZ', { dateStyle: 'full' })} · Vamos organizar o seu trabalho de hoje.</p></div>
+      <div class="home-profile"><div class="av">${esc(iniciais(s.nome))}</div><div><b>${esc(s.nome)}</b><span>${esc(E.user.escola || (E.user.papel === 'director' ? 'Director' : 'Professor'))}</span></div></div>
+    </div>
+  </section>
+  <div class="grid home-stats">
+    <div class="card home-stat stat-classes"><span class="home-stat-icon">🏫</span><div><b>${s.turmas} ${s.turmas === 1 ? 'Turma Activa' : 'Turmas Activas'}</b><span>Turmas registadas</span></div></div>
+    <div class="card home-stat stat-students"><span class="home-stat-icon">👥</span><div><b>${s.estudantes} ${s.estudantes === 1 ? 'Aluno' : 'Alunos'}</b><span>Nas suas turmas</span></div></div>
+    <div class="card home-stat stat-average"><span class="home-stat-icon">📈</span><div><b>${s.mediaGeral === null ? '—' : num(s.mediaGeral)}${s.mediaGeral === null ? '' : ' / 20'}</b><span>${s.mediaGeral === null ? 'A média aparece após lançar notas' : 'Média geral das notas finais'}</span></div></div>
+  </div>
+  <div class="row sp home-section-title"><div><h2>Módulos AulaPro</h2><p class="mut sm">Aceda rapidamente às ferramentas de que precisa.</p></div><button data-n>+ Criar novo</button></div>
+  <div class="grid home-modules">${modulos.map(([rota, icone, titulo, descricao, cor]) => `<button class="home-module ${cor}" data-ir="${rota}" type="button">
+    <span class="home-module-icon">${icone}</span><span class="home-module-text"><b>${titulo}</b><span>${descricao}</span></span><span class="home-module-arrow" aria-hidden="true">›</span>
+  </button>`).join('')}</div>
+  ${pk === 'gratis' ? `<div class="banner home-upgrade"><div><div class="b">Conheça o AulaPro Premium</div><div class="sm">Mais recursos para simplificar o seu trabalho pedagógico.</div></div><button data-ir="planos">Ver planos</button></div>` : ''}
+  <section class="home-recent"><div class="row sp"><div><h2>Actividade Recente</h2><p class="mut sm">Acompanhe o trabalho guardado na sua conta.</p></div></div>
+    <div class="card">${s.recentes.length ? s.recentes.map((d) => `<div class="home-activity"><span class="home-activity-icon">${simbolos[d.tipo] || '•'}</span><span class="home-activity-title">${esc(d.titulo)}</span><span class="sm mut">${dataHora(d.actualizado_em)}</span></div>`).join('')
+      : `<div class="home-empty"><span aria-hidden="true">✨</span><div><b>A sua actividade aparecerá aqui</b><p class="sm mut">${s.turmas ? 'Crie um plano, apresentação ou ficha para começar.' : 'Crie a sua primeira turma ou prepare um plano de aula.'}</p></div>${s.turmas ? '' : '<button class="sec" data-ir="caderneta">Criar primeira turma</button>'}</div>`}</div>
+  </section>`;
   $$('[data-ir]', el).forEach((c) => (c.onclick = () => ir(c.dataset.ir, c.dataset.t ? { turma: Number(c.dataset.t) } : {})));
   $('[data-n]', el).onclick = async () => {
     const r = await pedir('Criar novo módulo', [{ nome: 'm', rotulo: 'O que pretende criar?', opcoes: [{ v: 'caderneta', t: 'Nova turma (Caderneta)' }, { v: 'plano', t: 'Novo plano de aula' }, { v: 'fichas', t: 'Nova ficha / teste' }] }], 'Continuar');

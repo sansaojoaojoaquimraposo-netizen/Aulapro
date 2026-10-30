@@ -127,13 +127,16 @@ function registarHandlers(getJanela) {
     const q = (sql, ...a) => db().prepare(sql).get(...a);
     const turmas = db().prepare('SELECT t.id,t.nome,t.disciplina,(SELECT COUNT(*) FROM alunos a WHERE a.turma_id=t.id) alunos FROM turmas t WHERE user_id=?').all(u.id);
     const recentes = db().prepare("SELECT id,tipo,titulo,actualizado_em FROM documentos WHERE user_id=? AND tipo!='rascunho' ORDER BY actualizado_em DESC LIMIT 6").all(u.id);
+    const notasFinais = [];
     const progresso = turmas.map((t) => {
       const c = carregarCaderneta(t.id, u.id);
+      c.linhas.forEach((l) => { if (Number.isFinite(l.final)) notasFinais.push(l.final); });
       const feitos = c.linhas.filter((l) => l.resultado !== 'Pendente').length;
       return { id: t.id, nome: `${t.disciplina} • ${t.nome}`, alunos: t.alunos, pct: t.alunos ? Math.round((feitos / t.alunos) * 100) : 0 };
     });
     return {
       nome: u.nome, estudantes: turmas.reduce((a, t) => a + t.alunos, 0), turmas: turmas.length,
+      mediaGeral: notasFinais.length ? calc.round1(notasFinais.reduce((a, n) => a + n, 0) / notasFinais.length) : null,
       planos: q("SELECT COUNT(*) n FROM documentos WHERE user_id=? AND tipo='plano'", u.id).n,
       apresentacoes: q("SELECT COUNT(*) n FROM documentos WHERE user_id=? AND tipo='apresentacao'", u.id).n,
       fichas: q("SELECT COUNT(*) n FROM documentos WHERE user_id=? AND tipo='ficha'", u.id).n,

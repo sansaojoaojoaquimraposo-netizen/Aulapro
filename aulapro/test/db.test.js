@@ -13,6 +13,8 @@ const falha = async (fn, re) => { try { await fn(); } catch (e) { assert.match(e
   assert.strictEqual(u.papel, 'professor', 'registo público nunca cria admin');
   assert.strictEqual(u.plano_efectivo, 'gratis');
   assert.ok(!('senha_hash' in u));
+  const inicioVazio = await chamar('home.stats');
+  assert.deepStrictEqual([inicioVazio.turmas, inicioVazio.estudantes, inicioVazio.mediaGeral], [0, 0, null]);
   // --- limites do plano Grátis ---
   const t = await chamar('turmas.criar', { nome: '7ª A', disciplina: 'Física' });
   await falha(() => chamar('turmas.criar', { nome: '7ª B', disciplina: 'Física' }), /LIMITE.*1 turma/);
@@ -33,6 +35,8 @@ const falha = async (fn, re) => { try { await fn(); } catch (e) { assert.match(e
   const cad = await chamar('caderneta.obter', t);
   assert.strictEqual(cad.linhas[0].t1, 15.7); assert.strictEqual(cad.linhas[0].anual, 15.7); assert.strictEqual(cad.linhas[0].resultado, 'Aprovado');
   assert.strictEqual(cad.resumo.pendentes, 34);
+  const inicioComNotas = await chamar('home.stats');
+  assert.deepStrictEqual([inicioComNotas.turmas, inicioComNotas.estudantes, inicioComNotas.mediaGeral], [1, 35, 15.7]);
   // --- bloqueio por tentativas ---
   await chamar('auth.sair');
   for (let i = 0; i < 4; i++) await falha(() => chamar('auth.entrar', 't@t.mz', 'errada'), /incorrectos/);
